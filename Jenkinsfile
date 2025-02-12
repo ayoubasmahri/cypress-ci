@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch:"main",url:'https://github.com/ayoubasmahri/cypress-gitlab'  // Update with your GitLab/GitHub repo
+                git branch:"main",url:'https://github.com/ayoubasmahri/cypress-ci'  // Update with your GitLab/GitHub repo
             }
         }
 
