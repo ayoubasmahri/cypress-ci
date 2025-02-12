@@ -1,0 +1,46 @@
+pipeline {
+    agent any 
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', // Or your branch nam
+                    url: 'https://github.com/ayoubasmahri/cypress-ci' // Your GitLab repository URL
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Cypress Tests') {
+            steps {
+                sh './node_modules/.bin/cypress run' // Assumes Cypress is installed locally
+            }
+        }
+
+        stage('Generate Allure Report') {
+            steps {
+                sh './node_modules/.bin/allure generate allure-results --clean' 
+            }
+        }
+
+        stage('Publish Allure Report') {
+            steps {
+                allure([
+                    configuration: [
+                        allureReportBuildDir: 'allure-report'
+                    ]
+                ])
+            }
+            // Archive the raw results if needed for debugging
+            post {
+                always {
+                    archiveArtifacts artifacts: 'allure-results/**/*', allowEmptyArchive: true
+                }
+            }
+        }
+    }
+}
