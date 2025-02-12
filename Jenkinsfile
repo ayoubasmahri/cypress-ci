@@ -3,7 +3,8 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = "cypress-allure"
+        IMAGE_NAME = "cypress-allure"
+        CONTAINER_NAME = "cypress-test-run"
         ALLURE_RESULTS = "allure-results"
         ALLURE_REPORT = "allure-report"
     }
@@ -18,7 +19,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${PROJECT_NAME}")
+                    sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
@@ -26,30 +27,52 @@ pipeline {
         stage('Run Cypress Tests in Docker') {
             steps {
                 script {
-                    sh "docker run --rm -v \$(pwd)/${ALLURE_RESULTS}:/app/${ALLURE_RESULTS} ${PROJECT_NAME}"
+                    sh """
+                        docker run --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                    """ 
+                }
+            }
+        }
+
+        stage('Copy Allure Report') {
+            steps {
+                script {
+                    sh "docker cp ${CONTAINER_NAME}:/app/allure-results ./allure-results"
+                }
+            }
+        }
+
+        
+        stage('Stop & Remove Container') {
+            steps {
+                script {
+                    sh "docker rm -f ${CONTAINER_NAME}"
                 }
             }
         }
 
         stage('Generate Allure Report') {
             steps {
-                script {
-                    sh "allure generate ${ALLURE_RESULTS} --clean -o ${ALLURE_REPORT}"
-                }
+                sh 'allure generate allure-results --clean -o allure-report'
             }
         }
 
         stage('Archive Allure Report') {
             steps {
-                archiveArtifacts artifacts: "${ALLURE_REPORT}/**", fingerprint: true
+                archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
             }
         }
 
         stage('Publish Allure Report') {
             steps {
-                allure includeProperties: false, reportBuildPolicy: 'ALWAYS', results: [[path: "${ALLURE_RESULTS}"]]
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: 'allure-results']]
+                ])
             }
         }
+    }
     }
 
     post {
