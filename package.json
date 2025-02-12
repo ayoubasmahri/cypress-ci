@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "allure-cypress": "^3.1.0",
+    "cypress": "^14.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
