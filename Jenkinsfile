@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -7,12 +6,13 @@ pipeline {
         CONTAINER_NAME = "cypress-test-run"
         ALLURE_RESULTS = "allure-results"
         ALLURE_REPORT = "allure-report"
+        ALLURE_REPORT_URL = "http://localhost:8080/job/cypress-ci/${BUILD_NUMBER}/allure" // Update with the actual URL
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch:"main",url:'https://github.com/ayoubasmahri/cypress-ci'  // Update with your GitLab/GitHub repo
+                git branch: "main", url: 'https://github.com/ayoubasmahri/cypress-ci'  // Update with your GitLab/GitHub repo
             }
         }
 
@@ -42,7 +42,6 @@ pipeline {
             }
         }
 
-        
         stage('Stop & Remove Container') {
             steps {
                 script {
@@ -73,14 +72,24 @@ pipeline {
             }
         }
     }
+
     post {
         always {
-            slackSend(channel: "jenkins", message: "pipeline passed successfully")
+            script {
+                def buildStatus = currentBuild.currentResult
+                def buildUrl = env.BUILD_URL
+                def branchName = env.GIT_BRANCH ?: 'N/A'
+
+                slackSend(channel: "jenkins", 
+                          message: """
+                              Pipeline Status: ${buildStatus}
+                              Branch: ${branchName}
+                              Build URL: ${buildUrl}
+                              Allure Report: <${ALLURE_REPORT_URL}|Click here to view the report>
+                              """
+                )
+            }
             cleanWs()
         }
     }
-
-    }
-
-    
-
+}
