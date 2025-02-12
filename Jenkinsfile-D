@@ -30,9 +30,9 @@ pipeline {
         stage('Publish Allure Report') {
             steps {
                 allure([
-                    configuration: [
-                        allureReportBuildDir: 'allure-report'
-                    ]
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: 'allure-results']]
                 ])
             }
             // Archive the raw results if needed for debugging
