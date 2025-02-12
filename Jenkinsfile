@@ -75,6 +75,7 @@ pipeline {
     }
     post {
         always {
+            slackSend(channel: "jenkins", message: "pipeline passed successfully")
             cleanWs()
         }
     }
